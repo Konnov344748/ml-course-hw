@@ -1,0 +1,156 @@
+import numpy as np
+
+
+class LossAndDerivatives:
+    @staticmethod
+    def mse(X, Y, w):
+        """
+        X : numpy array of shape (`n_observations`, `n_features`)
+        Y : numpy array of shape (`n_observations`, `target_dimentionality`) or (`n_observations`,)
+        w : numpy array of shape (`n_features`, `target_dimentionality`) or (`n_features`,)
+
+        Return : float
+            single number with MSE value of linear model (X.dot(w)) with no bias term
+            on the selected dataset.
+        
+        Comment: If Y is two-dimentional, average the error over both dimentions.
+        """
+
+        return np.mean((X.dot(w) - Y)**2)
+
+    @staticmethod
+    def mae(X, Y, w):
+        """
+        X : numpy array of shape (`n_observations`, `n_features`)
+        Y : numpy array of shape (`n_observations`, `target_dimentionality`) or (`n_observations`,)
+        w : numpy array of shape (`n_features`, `target_dimentionality`) or (`n_features`,)
+                
+        Return: float
+            single number with MAE value of linear model (X.dot(w)) with no bias term
+            on the selected dataset.
+
+        Comment: If Y is two-dimentional, average the error over both dimentions.
+        """
+
+        return np.mean(np.absolute(X.dot(w) - Y)) # Х-матрица размерности n_observations (количетсво наблюдений), n_features (количество признаков), w-вектор-столбец размера n_features, следовательно, их произведение (Х*w) будет иметь размерность n_observations, 1, т.е. это вектор длины n_observations. Таким образом, Х*w-Y - это тоже вектор длины n_observations. От него мы и берем норму L_1 и возвращаем результат (усреднив его).
+
+    @staticmethod
+    def l2_reg(w):
+        """
+        w : numpy array of shape (`n_features`, `target_dimentionality`) or (`n_features`,)
+
+        Return: float
+            single number with sum of squared elements of the weight matrix ( \sum_{ij} w_{ij}^2 )
+
+        Computes the L2 regularization term for the weight matrix w.
+        """
+        
+        return (w ** 2).sum() # Чтобы вычислить сумму квадратов компонент вектора w пользуемся тем, что питон покомпонентно берет вторую степень с помощью выражения w ** 2, затем вычисляем сумму с помощью метода sum().
+
+    @staticmethod
+    def l1_reg(w):
+        """
+        w : numpy array of shape (`n_features`, `target_dimentionality`)
+
+        Return : float
+            single number with sum of the absolute values of the weight matrix ( \sum_{ij} |w_{ij}| )
+        
+        Computes the L1 regularization term for the weight matrix w.
+        """
+
+        return np.absolute(w).sum() # Чтобы вычислить сумму модулей компонент вектора w пользуемся тем, что питон покомпонентно берет вторую степень с помощью выражения np.absolute(w), затем вычисляем сумму с помощью метода sum().
+
+    @staticmethod
+    def no_reg(w):
+        """
+        Simply ignores the regularization
+        """
+        return 0
+    
+    @staticmethod
+    def mse_derivative(X, Y, w):
+        """
+        X : numpy array of shape (`n_observations`, `n_features`)
+        Y : numpy array of shape (`n_observations`, `target_dimentionality`) or (`n_observations`,)
+        w : numpy array of shape (`n_features`, `target_dimentionality`) or (`n_features`,)
+        
+        Return : numpy array of same shape as `w`
+
+        Computes the MSE derivative for linear regression (X.dot(w)) with no bias term
+        w.r.t. w weight matrix.
+        
+        Please mention, that in case `target_dimentionality` > 1 the error is averaged along this
+        dimension as well, so you need to consider that fact in derivative implementation.
+        """
+        n_observations, n_features = X.shape # получаем n_observations, n_features с помощью распаковки аргументов.
+
+        if len(Y.shape) == 1:
+            Y = Y[:, np.newaxis]
+        if len(w.shape) == 1:
+            w = w[:, np.newaxis]
+        
+        target_dimentionality = Y.shape[1]
+        error = Y - X.dot(w) # вычисляем ошибку-(Y - X*w)
+        derivative = - 2 / (n_observations * target_dimentionality) * X.T.dot(error) # вычисляем производную 2СX^T(X w - y)=-2СX^T error, где С-это скаляр.
+        
+        return derivative
+
+    @staticmethod
+    def mae_derivative(X, Y, w):
+        """
+        X : numpy array of shape (`n_observations`, `n_features`)
+        Y : numpy array of shape (`n_observations`, `target_dimentionality`) or (`n_observations`,)
+        w : numpy array of shape (`n_features`, `target_dimentionality`) or (`n_features`,)
+        
+        Return : numpy array of same shape as `w`
+
+        Computes the MAE derivative for linear regression (X.dot(w)) with no bias term
+        w.r.t. w weight matrix.
+        
+        Please mention, that in case `target_dimentionality` > 1 the error is averaged along this
+        dimension as well, so you need to consider that fact in derivative implementation.
+        """
+        n_observations, n_features = X.shape # получаем n_observations, n_features с помощью распаковки аргументов.
+
+        if len(Y.shape) == 1:
+            Y = Y[:, np.newaxis]
+        if len(w.shape) == 1:
+            w = w[:, np.newaxis]
+
+        diff = np.sign(X.dot(w) - Y) # вычисляем покомпонентно знак вектора X*w-Y
+        target_dimentionality = Y.shape[1]  
+        derivative = np.dot(X.T, diff) / (n_observations * target_dimentionality) # вычисляем производную L_1 ошибки.
+        print(derivative.shape, w.shape)
+        return derivative
+
+    @staticmethod
+    def l2_reg_derivative(w):
+        """
+        w : numpy array of shape (`n_features`, `target_dimentionality`) or (`n_features`,)
+
+        Return : numpy array of same shape as `w`
+
+        Computes the L2 regularization term derivative w.r.t. the weight matrix w.
+        """
+
+        return 2*w # производная w^T w = 2w
+
+    @staticmethod
+    def l1_reg_derivative(w):
+        """
+        Y : numpy array of shape (`n_observations`, `target_dimentionality`) or (`n_observations`,)
+        w : numpy array of shape (`n_features`, `target_dimentionality`) or (`n_features`,)
+
+        Return : numpy array of same shape as `w`
+
+        Computes the L1 regularization term derivative w.r.t. the weight matrix w.
+        """
+
+        return np.sign(w) # производная модуля=sign
+
+    @staticmethod
+    def no_reg_derivative(w):
+        """
+        Simply ignores the derivative
+        """
+        return np.zeros_like(w)
